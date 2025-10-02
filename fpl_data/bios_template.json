@@ -1,0 +1,68 @@
+{
+  "1000001": {
+    "team_name": "Average Team",
+    "manager": "Average Joe",
+    "bio": "Represent the average team, yet frequently beat everyone else.",
+    "league_wins": 0
+  },
+  "123456": {
+    "team_name": "Team Alpha",
+    "manager": "Alex Smith",
+    "bio": "A team known for unpredictable strategies and surprising results.",
+    "league_wins": 1
+  },
+  "234567": {
+    "team_name": "Beta United",
+    "manager": "Jamie Lee",
+    "bio": "Consistently mid-table, but always aiming for the top.",
+    "league_wins": 0
+  },
+  "345678": {
+    "team_name": "Gamma FC",
+    "manager": "Morgan Ray",
+    "bio": "Newcomers with a lot to prove this season.",
+    "league_wins": 0
+  },
+  "456789": {
+    "team_name": "Delta Rovers",
+    "manager": "Taylor Jordan",
+    "bio": "A team with a history of dramatic comebacks.",
+    "league_wins": 2
+  },
+  "567890": {
+    "team_name": "Epsilon Eleven",
+    "manager": "Casey Morgan",
+    "bio": "Always entertaining, never predictable.",
+    "league_wins": 1
+  },
+  "678901": {
+    "team_name": "Zeta Squad",
+    "manager": "Riley Quinn",
+    "bio": "A squad that values teamwork above all else.",
+    "league_wins": 0
+  },
+  "789012": {
+    "team_name": "Eta Athletic",
+    "manager": "Jordan Blake",
+    "bio": "Famous for their defensive tactics and close games.",
+    "league_wins": 1
+  },
+  "890123": {
+    "team_name": "Theta Wanderers",
+    "manager": "Drew Parker",
+    "bio": "A team that never gives up, no matter the odds.",
+    "league_wins": 0
+  },
+  "901234": {
+    "team_name": "Iota City",
+    "manager": "Sam Taylor",
+    "bio": "Young squad with lots of potential for the future.",
+    "league_wins": 0
+  },
+  "123789": {
+    "team_name": "Kappa Kings",
+    "manager": "Charlie Avery",
+    "bio": "Known for their attacking flair and high-scoring matches.",
+    "league_wins": 3
+  }
+}
