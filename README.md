@@ -113,5 +113,5 @@ For the script to run, this needs to be renamed to `bios.json`.
 
 ### `fpl_data/config_template.json`
 
-Gives the template for providing the league ID and relevant gameweek (this will need updating for each new gameweek).
+Gives the template for providing the league ID and relevant gameweek (this will need updating for each new gameweek).  
 For the script to run, this needs to be renamed to `config.json`.
