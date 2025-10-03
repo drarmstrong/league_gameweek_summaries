@@ -107,7 +107,8 @@ This optional script runs the local LLMs using Ollama (needs a separate installa
 ### `fpl_data/bios_template.json`
 
 Gives the template for providing the team information (FPL managers IDs, team names, manager names, extra info).  
-For the script to run, this needs to be renamed to `bios.json`.
+For the script to run, this needs to be renamed to `bios.json`.  
+If your league contains an odd number of teams with an AVERAGE team, then the first block of the template needs to be retained.
 
 ---
 
