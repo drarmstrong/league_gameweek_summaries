@@ -6,7 +6,6 @@ from utils import (
     get_gameweek_picks,
     get_player_data
 )
-from collections import defaultdict
 from llm_summary import query_ollama, save_output
 from pprint import pprint
 
