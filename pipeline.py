@@ -45,6 +45,7 @@ def extract_match_summary(manager_id, opponent_id, gameweek):
             break
 
     player_points = []
+    bench_player_points = []
 
     for pick in picks:
         name = player_name_lookup[pick["element"]]
@@ -53,9 +54,14 @@ def extract_match_summary(manager_id, opponent_id, gameweek):
             "name": name,
             "points": points
         }
-        player_points.append(player_gameweek)
         if pick["is_captain"]:
             player_captain = player_name_lookup[pick["element"]]
+        # Skip bench players unless Bench Boost chip is active
+        if pick["position"] > 11 and chip != "bboost":
+            bench_player_points.append(player_gameweek)
+            continue
+        else:
+            player_points.append(player_gameweek)
 
     top_players = sorted(player_points, key=lambda x: x['points'], reverse=True)[:3]
     bottom_players = sorted(player_points, key=lambda x: x["points"])[:3]
@@ -72,6 +78,7 @@ def extract_match_summary(manager_id, opponent_id, gameweek):
         "number_of_transfers": transfers_made,
         "top_scoring_players": top_players,
         "lowest_scoring_players": bottom_players,
+        "bench_player_points": bench_player_points,
         "captain": player_captain if 'player_captain' in locals() else "None",
         "team_name": team_bio['team_name'],
         "manager": team_bio['manager'],
