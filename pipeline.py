@@ -33,7 +33,7 @@ player_points_lookup = {p["id"]: p["event_points"] for p in players}
 def extract_match_summary(manager_id, opponent_id, gameweek):
     picks_data = get_gameweek_picks(manager_id, gameweek)  # Get data from API
     picks = picks_data["picks"]
-    manager_points = picks_data["entry_history"]["points"]
+    manager_points = picks_data["entry_history"]["points"] - picks_data["entry_history"]["event_transfers_cost"]
     bench_points = picks_data["entry_history"]["points_on_bench"]
     transfers_made = picks_data["entry_history"]["event_transfers"]
     chip = picks_data.get("active_chip") or "None"
