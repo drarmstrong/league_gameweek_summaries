@@ -42,6 +42,8 @@ def extract_match_summary(manager_id, opponent_id, gameweek):
         if position["entry"] == manager_id:
             rank = position["rank"]
             previous_rank = position["last_rank"]
+            league_points = position["total"]
+            total_points = position["points_for"]
             break
 
     player_points = []
@@ -74,6 +76,8 @@ def extract_match_summary(manager_id, opponent_id, gameweek):
         "bench_points": bench_points,
         "league_rank": rank,
         "previous_league_rank": previous_rank,
+        "overall_league_points": league_points,
+        "overall_fpl_points": total_points,
         "chip_used": chip,
         "number_of_transfers": transfers_made,
         "top_scoring_players": top_players,
