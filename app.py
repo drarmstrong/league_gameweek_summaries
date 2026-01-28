@@ -47,6 +47,19 @@ with st.sidebar:
         max_value=38,
         help="The gameweek to generate reports for"
     )
+
+    # Brutality slider
+    st.subheader("Tone Settings")
+    brutality_default = int(st.session_state.prompts.get("brutality_level", 3))
+    brutality_level = st.slider(
+        "Brutality Level",
+        min_value=1,
+        max_value=5,
+        value=brutality_default,
+        step=1,
+        help="Select how harsh/critical the tone of the report should be (1 = mild, 5 = savage)."
+    )
+    st.session_state.brutality_level = int(brutality_level)
     
     # Bios editor
     st.subheader("Team Bios")
@@ -77,19 +90,6 @@ with st.sidebar:
         st.success("✓ Prompts JSON is valid")
     except json.JSONDecodeError as e:
         st.error(f"❌ Invalid JSON in prompts: {e}")
-
-    # Brutality slider
-    st.subheader("Tone Settings")
-    brutality_default = int(st.session_state.prompts.get("brutality_level", 3))
-    brutality_level = st.slider(
-        "Brutality Level",
-        min_value=1,
-        max_value=5,
-        value=brutality_default,
-        step=1,
-        help="Select how harsh/critical the tone of the report should be (1 = mild, 5 = savage)."
-    )
-    st.session_state.brutality_level = int(brutality_level)
 
 
 # Main content area
