@@ -289,10 +289,10 @@ if st.button("🚀 Run Pipeline", type="primary", use_container_width=True):
             st.write(f"\n✓ All match reports processed ({match_num} matches)")
             st.write("\nGenerating summary prompt...")
 
-            # Create prompt for LLM from templates and match reports
-            full_prompt = (st.session_state.prompts["intro"])
+            # Create prompt for LLM from markdown template and match reports
+            with open("prompts_v2.md") as f:
+                full_prompt = f.read()
             full_prompt += f'\n{match_reports}\n'
-            full_prompt += st.session_state.prompts["outro"]
 
             st.write("✓ Full prompt generated.")
 
