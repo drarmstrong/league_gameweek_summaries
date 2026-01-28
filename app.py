@@ -24,9 +24,13 @@ if "bios" not in st.session_state:
     with open("fpl_data/bios.json") as f:
         st.session_state.bios = json.load(f)
 
-if "prompts" not in st.session_state:
-    with open("prompts.json") as f:
-        st.session_state.prompts = json.load(f)
+if "prompt_task" not in st.session_state:
+    with open("prompt_task.md") as f:
+        st.session_state.prompt_task = f.read()
+
+if "prompt_detail" not in st.session_state:
+    with open("prompt_detail.md") as f:
+        st.session_state.prompt_detail = f.read()
 
 
 # Sidebar for configuration
@@ -50,12 +54,11 @@ with st.sidebar:
 
     # Brutality slider
     st.subheader("Tone Settings")
-    brutality_default = int(st.session_state.prompts.get("brutality_level", 3))
     brutality_level = st.slider(
         "Brutality Level",
         min_value=1,
         max_value=5,
-        value=brutality_default,
+        value=3,
         step=1,
         help="Select how harsh/critical the tone of the report should be (1 = mild, 5 = savage)."
     )
@@ -76,20 +79,26 @@ with st.sidebar:
     except json.JSONDecodeError as e:
         st.error(f"❌ Invalid JSON in bios: {e}")
     
-    # Prompts editor
+    # Prompt editors
     st.subheader("Report Prompts")
-    prompts_json_str = st.text_area(
-        "Edit report prompts (JSON format)",
-        value=json.dumps(st.session_state.prompts, indent=2),
-        height=300,
-        help="Edit the report generation prompts. Must be valid JSON."
-    )
     
-    try:
-        st.session_state.prompts = json.loads(prompts_json_str)
-        st.success("✓ Prompts JSON is valid")
-    except json.JSONDecodeError as e:
-        st.error(f"❌ Invalid JSON in prompts: {e}")
+    # Task prompt editor
+    prompt_task_str = st.text_area(
+        "Edit task prompt (Markdown)",
+        value=st.session_state.prompt_task,
+        height=200,
+        help="Edit the task description that sets up the prompt for the LLM."
+    )
+    st.session_state.prompt_task = prompt_task_str
+    
+    # Detail prompt editor
+    prompt_detail_str = st.text_area(
+        "Edit detail prompt (Markdown)",
+        value=st.session_state.prompt_detail,
+        height=400,
+        help="Edit the detailed instructions including brutality level guidance for the LLM."
+    )
+    st.session_state.prompt_detail = prompt_detail_str
 
 
 # Main content area
@@ -303,12 +312,10 @@ if st.button("🚀 Run Pipeline", type="primary", use_container_width=True):
             st.write("\nGenerating summary prompt...")
 
             # Create prompt for LLM from markdown template and match reports
-            with open("prompt_task.md") as f:
-                full_prompt = f.read()
+            full_prompt = st.session_state.prompt_task
             # Insert brutality level selected in sidebar
             full_prompt += f"\nBrutality Level: {st.session_state.get('brutality_level', 3)}\n"
-            with open("prompt_detail.md") as f:
-                full_prompt += f.read()
+            full_prompt += st.session_state.prompt_detail
             full_prompt += f'\n{match_reports}\n'
 
             st.write("✓ Full prompt generated.")
