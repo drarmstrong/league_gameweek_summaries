@@ -78,6 +78,19 @@ with st.sidebar:
     except json.JSONDecodeError as e:
         st.error(f"❌ Invalid JSON in prompts: {e}")
 
+    # Brutality slider
+    st.subheader("Tone Settings")
+    brutality_default = int(st.session_state.prompts.get("brutality_level", 3))
+    brutality_level = st.slider(
+        "Brutality Level",
+        min_value=1,
+        max_value=5,
+        value=brutality_default,
+        step=1,
+        help="Select how harsh/critical the tone of the report should be (1 = mild, 5 = savage)."
+    )
+    st.session_state.brutality_level = int(brutality_level)
+
 
 # Main content area
 st.subheader("Generate Match Reports")
@@ -290,8 +303,12 @@ if st.button("🚀 Run Pipeline", type="primary", use_container_width=True):
             st.write("\nGenerating summary prompt...")
 
             # Create prompt for LLM from markdown template and match reports
-            with open("prompts_v2.md") as f:
+            with open("prompt_task.md") as f:
                 full_prompt = f.read()
+            # Insert brutality level selected in sidebar
+            full_prompt += f"\nBrutality Level: {st.session_state.get('brutality_level', 3)}\n"
+            with open("prompt_detail.md") as f:
+                full_prompt += f.read()
             full_prompt += f'\n{match_reports}\n'
 
             st.write("✓ Full prompt generated.")
