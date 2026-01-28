@@ -62,6 +62,21 @@ with st.sidebar:
         st.success("✓ Bios JSON is valid")
     except json.JSONDecodeError as e:
         st.error(f"❌ Invalid JSON in bios: {e}")
+    
+    # Prompts editor
+    st.subheader("Report Prompts")
+    prompts_json_str = st.text_area(
+        "Edit report prompts (JSON format)",
+        value=json.dumps(st.session_state.prompts, indent=2),
+        height=300,
+        help="Edit the report generation prompts. Must be valid JSON."
+    )
+    
+    try:
+        st.session_state.prompts = json.loads(prompts_json_str)
+        st.success("✓ Prompts JSON is valid")
+    except json.JSONDecodeError as e:
+        st.error(f"❌ Invalid JSON in prompts: {e}")
 
 
 # Main content area
