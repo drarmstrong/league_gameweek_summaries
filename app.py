@@ -289,7 +289,7 @@ if st.button("🚀 Run Pipeline", type="primary", use_container_width=True):
             with st.expander("View Match Reports Summary"):
                 st.json(match_reports)
             
-            with st.expander("View Full Prompt"):
+            with st.expander("View Full Prompt", expanded=True):
                 st.text(full_prompt)
             
             # Option to save
