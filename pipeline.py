@@ -26,11 +26,35 @@ gameweek = config["latest_gameweek"]
 
 # Load player data for name lookups
 player_data = get_player_data()
+if not player_data:
+    raise Exception("Failed to load player data from API.")
+else:
+    print("Player data loaded successfully.")
 players = player_data["elements"]
 player_name_lookup = {p["id"]: p["web_name"] for p in players}
 player_points_lookup = {p["id"]: p["event_points"] for p in players}
 
-def extract_match_summary(manager_id, opponent_id, gameweek):
+
+def get_average_standings(standings, match):
+    for position in standings:
+        if position["entry_name"] == "AVERAGE":
+            rank = position["rank"]
+            previous_rank = position["last_rank"]
+            league_points = position["total"]
+            total_points = position["points_for"]
+            break
+    return {
+        "name": bios.get(str(1000001), {}).get("team_name", "Unknown"),
+        "manager_points": match["entry_1_points"],
+        "league_rank": rank,
+        "previous_league_rank": previous_rank,
+        "overall_league_points": league_points,
+        "overall_fpl_points": total_points,
+        "background": bios.get(str(1000001), "No bio available.")
+    }
+
+
+def extract_match_summary(manager_id, gameweek):
     picks_data = get_gameweek_picks(manager_id, gameweek)  # Get data from API
     picks = picks_data["picks"]
     manager_points = picks_data["entry_history"]["points"] - picks_data["entry_history"]["event_transfers_cost"]
@@ -92,8 +116,16 @@ def extract_match_summary(manager_id, opponent_id, gameweek):
 
 # Fetch league data
 standings_data = get_h2h_league_standings(h2h_league_id)  # Get data from API
+if not standings_data:
+    raise Exception("Failed to load league standings from API.")
+else:
+    print("League standings loaded successfully.")
 standings = standings_data["standings"]["results"]
 matches_data = get_h2h_league_matches(h2h_league_id)  # Get data from API
+if not matches_data:
+    raise Exception("Failed to load league matches from API.")
+else:
+    print("League matches loaded successfully.")
 fixtures = matches_data["results"]
 
 print("Finished loading data from API.")
@@ -117,8 +149,8 @@ for match in fixtures:
     if team_1_name != "AVERAGE" and team_2_name != "AVERAGE":
         print(f"Processing match between {team_1_name} and {team_2_name}...")
 
-        team_1 = extract_match_summary(team_1_id, team_2_id, gameweek=gameweek)
-        team_2 = extract_match_summary(team_2_id, team_1_id, gameweek=gameweek)
+        team_1 = extract_match_summary(team_1_id, gameweek=gameweek)
+        team_2 = extract_match_summary(team_2_id, gameweek=gameweek)
 
         match_reports.append({
             "match": match_num,
@@ -129,27 +161,25 @@ for match in fixtures:
         print("Finished processing match report for Match", match_num)
     elif team_1_name == "AVERAGE":
         print(f"Processing match between Average and {team_2_name}...")
-        team_2 = extract_match_summary(team_2_id, team_1_id, gameweek=gameweek)
+        team_1 = get_average_standings(standings, match)
+        team_2 = extract_match_summary(team_2_id, gameweek=gameweek)
 
         match_reports.append({
             "match": match_num,
-            "team_1": {"name": bios.get(str(1000001), {}).get("team_name", "Unknown"), 
-                       "manager_points": match["entry_1_points"], 
-                       "bio": bios.get(str(1000001), "No bio available.")},
+            "team_1": {**team_1, "name": team_1['background']['team_name']},
             "team_2": {**team_2, "name": team_2_name},
             "score": f"{match['entry_1_points']} - {team_2['manager_points']}",
         })
         print("Finished processing match report for Match", match_num)
     elif team_2_name == "AVERAGE":
         print(f"Processing match between {team_1_name} and Average...")
-        team_1 = extract_match_summary(team_1_id, team_2_id, gameweek=gameweek)
+        team_1 = extract_match_summary(team_1_id, gameweek=gameweek)
+        team_2 = get_average_standings(standings, match)
 
         match_reports.append({
             "match": match_num,
             "team_1": {**team_1, "name": team_1_name},
-            "team_2": {"name": bios.get(str(1000001), {}).get("team_name", "Unknown"), 
-                       "manager_points": match["entry_1_points"], 
-                       "bio": bios.get(str(1000001), "No bio available.")},
+            "team_2": {**team_2, "name": team_2['background']['team_name']},
             "score": f"{team_1['manager_points']} - {match['entry_2_points']}",
         })
         print("Finished processing match report for Match", match_num)

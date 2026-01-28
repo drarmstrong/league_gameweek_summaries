@@ -7,8 +7,29 @@ def get_h2h_league_standings(league_id):
     return requests.get(url).json()
 
 def get_h2h_league_matches(league_id):
-    url = f"{BASE_URL}/leagues-h2h-matches/league/{league_id}"
-    return requests.get(url).json()
+    """
+    Fetch all paginated match pages for a head-to-head league and return a single
+    dict with an aggregated 'results' list.
+    """
+    matches_url = f"{BASE_URL}/leagues-h2h-matches/league/{league_id}"
+    all_results = []
+    page = 1
+
+    while True:
+        resp = requests.get(matches_url, params={"page": page})
+        resp.raise_for_status()
+        data = resp.json()
+
+        page_results = data.get("results", [])
+        all_results.extend(page_results)
+
+        # Stop when API indicates no next page
+        if not data.get("has_next", False):
+            break
+
+        page += 1
+
+    return {"results": all_results}
 
 def get_manager_history(manager_id):
     url = f"{BASE_URL}/entry/{manager_id}/history/"

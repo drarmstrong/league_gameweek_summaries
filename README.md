@@ -65,13 +65,64 @@ pip install -r requirements.txt
 
 ## Run the Script(s):
 
-Run the script using Python to run the pipeline.py script:
+### Option 1: Run as a Streamlit App (Recommended)
+
+The project now includes a web-based interface powered by Streamlit. To run the app:
+
+```
+streamlit run app.py
+```
+
+This will open a local web interface where you can:
+- Adjust the league ID and gameweek settings
+- Edit team bios and configuration in real-time
+- Run the pipeline with a single click
+- View the generated match reports
+
+### Option 2: Run the CLI Pipeline
+
+To run the original command-line pipeline:
 
 ```
 python pipeline.py
 ```
 
 ### Note: you will need to create the config.json and bios.json files from the templates before the code will function (see below for more info)
+
+---
+
+## Deployment
+
+### Deploy on Streamlit Cloud
+
+1. Push your repository to GitHub
+2. Go to [streamlit.io/cloud](https://streamlit.io/cloud)
+3. Connect your GitHub account and select this repository
+4. Streamlit Cloud will automatically detect and deploy `app.py`
+
+### Deploy Locally with Docker
+
+Create a `Dockerfile` in the project root:
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+```
+
+Build and run:
+
+```bash
+docker build -t fpl-reports .
+docker run -p 8501:8501 fpl-reports
+```
 
 ---
 

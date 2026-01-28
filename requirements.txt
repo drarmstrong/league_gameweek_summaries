@@ -1,4 +1,3 @@
 # Python package dependencies for the project
-json
-pprint
 requests
+streamlit>=1.28.0
