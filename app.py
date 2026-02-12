@@ -7,7 +7,8 @@ from utils import (
     get_h2h_league_matches,
     get_manager_history,
     get_gameweek_picks,
-    get_player_data
+    get_player_data,
+    get_latest_gameweek
 )
 from llm_summary import query_ollama, save_output
 
@@ -46,7 +47,8 @@ with st.sidebar:
     )
     latest_gameweek = st.number_input(
         "Latest Gameweek",
-        value=int(st.session_state.config.get("latest_gameweek", 23)),
+        value = int(get_latest_gameweek()),
+        #value=int(st.session_state.config.get("latest_gameweek", 23)),
         min_value=1,
         max_value=38,
         help="The gameweek to generate reports for"

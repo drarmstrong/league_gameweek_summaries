@@ -46,3 +46,11 @@ def get_gameweek_picks(manager_id, gw):
 def get_player_data():
     url = f"{BASE_URL}/bootstrap-static/"
     return requests.get(url).json()
+
+def get_latest_gameweek():
+    url = f"{BASE_URL}/bootstrap-static/"
+    data = requests.get(url).json()
+    for event in data.get("events", []):
+        if event.get("is_current", True):
+            gameweek = event.get("id")
+    return gameweek
