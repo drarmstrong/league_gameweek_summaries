@@ -55,6 +55,12 @@ def get_average_standings(standings, match):
 
 
 def extract_match_summary(manager_id, gameweek):
+    """Extract match summary including captain/vice logic.
+
+    Both ``is_captain`` and ``is_vice_captain`` are checked to determine who
+    actually captained the side. If the original captain is benched, the
+    vice captain's points and name will be used.
+    """
     picks_data = get_gameweek_picks(manager_id, gameweek)  # Get data from API
     picks = picks_data["picks"]
     manager_points = picks_data["entry_history"]["points"] - picks_data["entry_history"]["event_transfers_cost"]
@@ -72,6 +78,8 @@ def extract_match_summary(manager_id, gameweek):
 
     player_points = []
     bench_player_points = []
+    captain_info = None
+    vice_info = None
 
     for pick in picks:
         name = player_name_lookup[pick["element"]]
@@ -80,14 +88,27 @@ def extract_match_summary(manager_id, gameweek):
             "name": name,
             "points": points
         }
-        if pick["is_captain"]:
-            player_captain = player_name_lookup[pick["element"]]
+        if pick.get("is_captain"):
+            captain_info = {"name": name, "points": points, "position": pick["position"]}
+        if pick.get("is_vice_captain"):
+            vice_info = {"name": name, "points": points, "position": pick["position"]}
         # Skip bench players unless Bench Boost chip is active
         if pick["position"] > 11 and chip != "bboost":
             bench_player_points.append(player_gameweek)
             continue
         else:
             player_points.append(player_gameweek)
+
+    if captain_info:
+        if captain_info["position"] > 11 and vice_info:
+            player_captain = vice_info["name"]
+            captain_points = vice_info["points"]
+        else:
+            player_captain = captain_info["name"]
+            captain_points = captain_info["points"]
+    else:
+        player_captain = "None"
+        captain_points = 0
 
     top_players = sorted(player_points, key=lambda x: x['points'], reverse=True)[:3]
     bottom_players = sorted(player_points, key=lambda x: x["points"])[:3]
@@ -107,7 +128,8 @@ def extract_match_summary(manager_id, gameweek):
         "top_scoring_players": top_players,
         "lowest_scoring_players": bottom_players,
         "bench_player_points": bench_player_points,
-        "captain": player_captain if 'player_captain' in locals() else "None",
+        "captain": player_captain,
+        "captain_points": captain_points,
         "team_name": team_bio['team_name'],
         "manager": team_bio['manager'],
         "number_of_league_titles": team_bio['league_wins'],

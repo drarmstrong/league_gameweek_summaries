@@ -143,7 +143,13 @@ def get_average_standings(standings, match):
 
 
 def extract_match_summary(manager_id, gameweek, player_name_lookup, player_points_lookup, standings):
-    """Extract summary for a single match"""
+    """Extract summary for a single match.
+
+    Handles captain assignments by inspecting both ``is_captain`` and
+    ``is_vice_captain`` flags. If the chosen captain ends up on the bench
+    (``position`` > 11) the vice captain is awarded the armband and their
+    points are recorded instead.
+    """
     picks_data = get_gameweek_picks(manager_id, gameweek)
     picks = picks_data["picks"]
     manager_points = picks_data["entry_history"]["points"] - picks_data["entry_history"]["event_transfers_cost"]
@@ -161,6 +167,9 @@ def extract_match_summary(manager_id, gameweek, player_name_lookup, player_point
 
     player_points = []
     bench_player_points = []
+    # track captain and vice captain details
+    captain_info = None
+    vice_info = None
 
     for pick in picks:
         name = player_name_lookup[pick["element"]]
@@ -169,14 +178,30 @@ def extract_match_summary(manager_id, gameweek, player_name_lookup, player_point
             "name": name,
             "points": points
         }
-        if pick["is_captain"]:
-            player_captain = player_name_lookup[pick["element"]]
+        # remember who was chosen as captain/vice so we can handle bench swaps
+        if pick.get("is_captain"):
+            captain_info = {"name": name, "points": points, "position": pick["position"]}
+        if pick.get("is_vice_captain"):
+            vice_info = {"name": name, "points": points, "position": pick["position"]}
+
         # Skip bench players unless Bench Boost chip is active
         if pick["position"] > 11 and chip != "bboost":
             bench_player_points.append(player_gameweek)
             continue
         else:
             player_points.append(player_gameweek)
+
+    # decide who actually wore the armband: if the captain is benched, vice steps up
+    if captain_info:
+        if captain_info["position"] > 11 and vice_info:
+            player_captain = vice_info["name"]
+            captain_points = vice_info["points"]
+        else:
+            player_captain = captain_info["name"]
+            captain_points = captain_info["points"]
+    else:
+        player_captain = "None"
+        captain_points = 0
 
     top_players = sorted(player_points, key=lambda x: x['points'], reverse=True)[:3]
     bottom_players = sorted(player_points, key=lambda x: x["points"])[:3]
@@ -196,7 +221,8 @@ def extract_match_summary(manager_id, gameweek, player_name_lookup, player_point
         "top_scoring_players": top_players,
         "lowest_scoring_players": bottom_players,
         "bench_player_points": bench_player_points,
-        "captain": player_captain if 'player_captain' in locals() else "None",
+        "captain": player_captain,
+        "captain_points": captain_points,
         "team_name": team_bio['team_name'],
         "manager": team_bio['manager'],
         "number_of_league_titles": team_bio['league_wins'],
