@@ -193,10 +193,17 @@ def extract_match_summary(manager_id, gameweek, player_name_lookup, player_point
 
     # decide who actually wore the armband: if the captain is benched, vice steps up
     if captain_info:
-        if captain_info["position"] > 11 and vice_info:
-            player_captain = vice_info["name"]
-            captain_points = vice_info["points"]
+        if captain_info["position"] > 11:
+            # original captain is benched, check if vice can take over
+            if vice_info and vice_info["position"] <= 11:
+                player_captain = vice_info["name"] + " (vice captain)"
+                captain_points = vice_info["points"]
+            else:
+                # both benched or no vice captain available
+                player_captain = "None"
+                captain_points = 0
         else:
+            # captain is playing
             player_captain = captain_info["name"]
             captain_points = captain_info["points"]
     else:
