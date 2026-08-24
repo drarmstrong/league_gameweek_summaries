@@ -1,62 +1,62 @@
 {
-  "217614": {
+  "562394": {
     "team_name": "Flower's Towers",
     "manager": "Christopher Flower",
-    "bio": "A solid competitor who are often a threat to the top places, but without a league title to their name.",
-    "league_wins": 0
-  },
-  "30112": {
-    "team_name": "Elanga Management",
-    "manager": "Shaun Proud",
-    "bio": "Previous league champions but narrowly missing out last time and will be keen to makes amends.",
+    "bio": "Last year's champions with their first ever title, they will be aiming to go back-to-back this season.",
     "league_wins": 1
   },
-  "1297622": {
-    "team_name": "Allcock & Ball FC",
+  "55452": {
+    "team_name": "Full VaJaissle",
+    "manager": "Shaun Proud",
+    "bio": "Previous league champions and in the mix last season - will be hoping to go all the way this time.",
+    "league_wins": 1
+  },
+  "1015305": {
+    "team_name": "Inter Ballactica",
     "manager": "James Ball",
-    "bio": "Last year's champions are looking to defend their title in the face of some stiff competition this season.",
+    "bio": "Champions in the season before last, but a disappointing performance last season in mid table.",
     "league_wins": 2
   },
-  "2179010": {
+  "382920": {
     "team_name": "Octopus's Ødegaarden",
     "manager": "Paul MacInnes",
-    "bio": "Often inconsistent but a previous winner and a strong challenger.",
+    "bio": "A previous winner but second to last in the previous season - needs to improve to challenge the title this time out.",
     "league_wins": 1
   },
-  "193942": {
-    "team_name": "Rhythm is a Danso",
+  "851808": {
+    "team_name": "Odobert Necessities",
     "manager": "David Armstrong",
-    "bio": "Often a challenger, but coming off the back of a poor last season and no title in 6 years, David Armstrong will be looking to turn things around.",
+    "bio": "Another mid-table finisher last season and no title in 7 years - a sleeping giant or a forgotten team?",
     "league_wins": 1
   },
-  "2982330": {
-    "team_name": "Wan rule for them",
+  "2932672": {
+    "team_name": "Backstreet Moyes",
     "manager": "Joseph Gallagher",
-    "bio": "Was part of the leading group last time out, but never quite made the final push. Will be hoping this year they could upset some of the big hitters",
+    "bio": "Was two gameweeks away from a first title last season until bottling it against last place Ken - will be desperate to make amends this time around.",
     "league_wins": 0
   },
-  "8141050": {
-    "team_name": "Telkmaniacs",
+  "4821128": {
+    "team_name": "Et Tu, Taty?",
     "manager": "Rob Telkman",
-    "bio": "Perennial underachievers but who knows what could happen in a brand new season.",
+    "bio": "Rarely trouble the top of the league, but were closer to mid-table than the bottom last season - signs of gradual improvement?",
     "league_wins": 0
   },
-  "3243465": {
-    "team_name": "Raya of Sunshine",
+  "2937751": {
+    "team_name": "Quantum of Tzolis",
     "manager": "Max Glover",
-    "bio": "Two times winners of the league but have missed out on the title in the last 3 seasons so are looking to make a return to the summit of the league.",
+    "bio": "Lost the title on the final day last season - can they pick themselves up and dust themselves off to go again this time? Past finishes suggest they will challenge again.",
     "league_wins": 2
   },
-  "6996520": {
-    "team_name": "Cuti Frutti",
+  "6250732": {
+    "team_name": "Moore to Tel",
     "manager": "Mark Lawford",
-    "bio": "Have often run out of steam early in the competition but are hoping to show some more staying power this time around.",
+    "bio": "Have often run out of steam early in the competition, starting strong last season but finishing 3rd from bottom. Expect more of the same this time around.",
     "league_wins": 0
   },
   "1000001": {
     "team_name": "Ken's Convicts",
     "manager": "Ken Rigby",
-    "bio": "Represent the average team, yet frequently beat everyone else. Ken is an ex-convict with a dark past having just come out of prison.",
+    "bio": "Represent the average team, yet finished bottom of the table last season - always the potential to upset the other managers in the league, in more ways than one. Fireworks to be expected from a combustible manager.",
     "league_wins": 0
   }
 }
