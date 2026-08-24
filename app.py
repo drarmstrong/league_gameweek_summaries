@@ -42,7 +42,7 @@ with st.sidebar:
     st.subheader("League Settings")
     h2h_league_id = st.number_input(
         "H2H League ID",
-        value=int(st.session_state.config.get("h2h_league_id", 588094)),
+        value=int(st.session_state.config.get("h2h_league_id", 593265)),
         help="The ID of your head-to-head fantasy league"
     )
     latest_gameweek = st.number_input(

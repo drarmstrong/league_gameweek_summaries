@@ -51,8 +51,6 @@ def get_latest_gameweek():
     url = f"{BASE_URL}/bootstrap-static/"
     data = requests.get(url).json()
     for event in data.get("events", []):
-        if event.get("is_previous", True):
-            gameweek = event.get("id")
-        else:
-            gameweek = 1
-    return gameweek
+        if event.get("is_previous"):
+            return event.get("id")
+    return 1
