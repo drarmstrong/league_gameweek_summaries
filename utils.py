@@ -53,4 +53,6 @@ def get_latest_gameweek():
     for event in data.get("events", []):
         if event.get("is_previous", True):
             gameweek = event.get("id")
+        else:
+            gameweek = 1
     return gameweek
