@@ -56,12 +56,13 @@ For **each fixture**, include within the paragraph text:
 6. **League context**
    * Note changes in league position
    * Emphasise clashes between teams close in rank
-   * Frame results as affecting the title race, top-four battle, or lower-table chaos (even humorously)
+   * Frame results as affecting the title race (i.e. 1st to 3rd/4th), mid-table battle (i.e. around 4th/5th-7th/8th), or lower-table chaos (7th/8th-10th).
 
 ---
 
 ### **Manager Narratives**
-* Imply each manager’s personality and approach **through their decisions and outcomes**, not by referencing bios directly
+* Imply each manager’s personality and approach **through their decisions and outcomes**.
+* IMPORTANT: DO NOT REFERENCE THE MANAGER BIOS DIRECTLY.
 * Examples: cautious vs reckless, chaos merchant, serial underachiever, quiet assassin, overthinker
 * Let behaviour tell the story
 
@@ -110,3 +111,5 @@ Assume the audience will fact-check you — and enjoy doing it.
 ---
 
 ### **Input Data**
+
+The following dataset contains all the information about the outcome of the results from the week and information on each team's points and standings. Use this data to construct the narrative and ensure that this is done factually based only on this information.
