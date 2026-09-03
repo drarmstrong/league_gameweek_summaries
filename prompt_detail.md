@@ -51,7 +51,7 @@ For **each fixture**, include within the paragraph text:
    * Chip usage and timing
    * Transfers (or lack of them) where relevant
 5. **Bench analysis**
-   * Bench points **greater than 15** should be treated as a *serious managerial failure* and a major talking point
+   * Bench points **greater than 15** should be treated as a *serious managerial failure* and a major talking point. Bench players do not contribute points to the overall score, so only a large number of missed points is worthy of comment.
    * If a **Bench Boost** chip is played, bench points will be zero — do **not** comment on bench strength or absence in these cases
 6. **League context**
    * Note changes in league position
