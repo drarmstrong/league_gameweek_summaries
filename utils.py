@@ -1,6 +1,9 @@
 import requests
+from collections import defaultdict
 
 BASE_URL = "https://fantasy.premierleague.com/api"
+
+FORM_WINDOW = 5
 
 def get_h2h_league_standings(league_id):
     url = f"{BASE_URL}/leagues-h2h/{league_id}/standings/"
@@ -46,6 +49,46 @@ def get_gameweek_picks(manager_id, gw):
 def get_player_data():
     url = f"{BASE_URL}/bootstrap-static/"
     return requests.get(url).json()
+
+def get_recent_form(fixtures, gameweek, window=FORM_WINDOW):
+    """Build a lookup of recent head-to-head form for every team in the league.
+
+    Looks back over the ``window`` gameweeks immediately before ``gameweek``
+    (fewer if the season hasn't reached that many yet) and records a W, D or L
+    for each completed match.
+
+    Returns a dict keyed by manager entry id — or the string ``"AVERAGE"`` for
+    the league's average team, which has no entry id — mapping to a form string
+    ordered from earliest to latest, e.g. ``"WDLLW"``. Teams with no completed
+    matches in the window are absent from the lookup.
+    """
+    first_gameweek = max(1, gameweek - window)
+    results_by_team = defaultdict(list)
+
+    for match in fixtures:
+        event = match["event"]
+        if event < first_gameweek or event >= gameweek:
+            continue
+
+        for side in ("entry_1", "entry_2"):
+            if match[f"{side}_win"]:
+                result = "W"
+            elif match[f"{side}_draw"]:
+                result = "D"
+            elif match[f"{side}_loss"]:
+                result = "L"
+            else:
+                # Fixture not played (or void), so it contributes no form
+                continue
+            # The AVERAGE team has no entry id, so fall back to its name
+            team_key = match[f"{side}_entry"] or match[f"{side}_name"]
+            results_by_team[team_key].append((event, result))
+
+    return {
+        team_key: "".join(result for _, result in sorted(results, key=lambda r: r[0]))
+        for team_key, results in results_by_team.items()
+    }
+
 
 def get_latest_gameweek():
     url = f"{BASE_URL}/bootstrap-static/"

@@ -8,7 +8,8 @@ from utils import (
     get_manager_history,
     get_gameweek_picks,
     get_player_data,
-    get_latest_gameweek
+    get_latest_gameweek,
+    get_recent_form
 )
 from llm_summary import query_ollama, save_output
 
@@ -122,7 +123,7 @@ with col2:
     st.write("Edit the configuration in the sidebar, then run the pipeline.")
 
 
-def get_average_standings(standings, match):
+def get_average_standings(standings, match, form_lookup):
     """Extract average standings from league standings"""
     for position in standings:
         if position["entry_name"] == "AVERAGE":
@@ -138,11 +139,12 @@ def get_average_standings(standings, match):
         "previous_league_rank": previous_rank,
         "overall_league_points": league_points,
         "overall_fpl_points": total_points,
+        "past_form": form_lookup.get("AVERAGE", ""),
         "background": st.session_state.bios.get(str(1000001), "No bio available.")
     }
 
 
-def extract_match_summary(manager_id, gameweek, player_name_lookup, player_points_lookup, standings):
+def extract_match_summary(manager_id, gameweek, player_name_lookup, player_points_lookup, standings, form_lookup):
     """Extract summary for a single match.
 
     Handles captain assignments by inspecting both ``is_captain`` and
@@ -230,6 +232,7 @@ def extract_match_summary(manager_id, gameweek, player_name_lookup, player_point
         "bench_player_points": bench_player_points,
         "captain": player_captain,
         "captain_points": captain_points,
+        "past_form": form_lookup.get(manager_id, ""),
         "team_name": team_bio['team_name'],
         "manager": team_bio['manager'],
         "number_of_league_titles": team_bio['league_wins'],
@@ -273,6 +276,9 @@ if st.button("🚀 Run Pipeline", type="primary", use_container_width=True):
             st.write("✓ League matches loaded successfully")
             fixtures = matches_data["results"]
 
+            # Recent head-to-head form (up to 5 gameweeks) for every team
+            form_lookup = get_recent_form(fixtures, latest_gameweek)
+
             st.write("Finished loading data from API.\n")
 
             match_reports = []
@@ -295,14 +301,16 @@ if st.button("🚀 Run Pipeline", type="primary", use_container_width=True):
 
                 if team_1_name != "AVERAGE" and team_2_name != "AVERAGE":
                     st.write(f"  → {team_1_name} vs {team_2_name}")
-                    team_1 = extract_match_summary(team_1_id, gameweek=latest_gameweek, 
+                    team_1 = extract_match_summary(team_1_id, gameweek=latest_gameweek,
                                                    player_name_lookup=player_name_lookup,
                                                    player_points_lookup=player_points_lookup,
-                                                   standings=standings)
+                                                   standings=standings,
+                                                   form_lookup=form_lookup)
                     team_2 = extract_match_summary(team_2_id, gameweek=latest_gameweek,
                                                    player_name_lookup=player_name_lookup,
                                                    player_points_lookup=player_points_lookup,
-                                                   standings=standings)
+                                                   standings=standings,
+                                                   form_lookup=form_lookup)
 
                     match_reports.append({
                         "match": match_num,
@@ -313,11 +321,12 @@ if st.button("🚀 Run Pipeline", type="primary", use_container_width=True):
                     
                 elif team_1_name == "AVERAGE":
                     st.write(f"  → AVERAGE vs {team_2_name}")
-                    team_1 = get_average_standings(standings, match)
+                    team_1 = get_average_standings(standings, match, form_lookup)
                     team_2 = extract_match_summary(team_2_id, gameweek=latest_gameweek,
                                                    player_name_lookup=player_name_lookup,
                                                    player_points_lookup=player_points_lookup,
-                                                   standings=standings)
+                                                   standings=standings,
+                                                   form_lookup=form_lookup)
 
                     match_reports.append({
                         "match": match_num,
@@ -331,8 +340,9 @@ if st.button("🚀 Run Pipeline", type="primary", use_container_width=True):
                     team_1 = extract_match_summary(team_1_id, gameweek=latest_gameweek,
                                                    player_name_lookup=player_name_lookup,
                                                    player_points_lookup=player_points_lookup,
-                                                   standings=standings)
-                    team_2 = get_average_standings(standings, match)
+                                                   standings=standings,
+                                                   form_lookup=form_lookup)
+                    team_2 = get_average_standings(standings, match, form_lookup)
 
                     match_reports.append({
                         "match": match_num,

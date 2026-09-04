@@ -4,7 +4,8 @@ from utils import (
     get_h2h_league_matches,
     get_manager_history,
     get_gameweek_picks,
-    get_player_data
+    get_player_data,
+    get_recent_form
 )
 from llm_summary import query_ollama, save_output
 from pprint import pprint
@@ -50,6 +51,7 @@ def get_average_standings(standings, match):
         "previous_league_rank": previous_rank,
         "overall_league_points": league_points,
         "overall_fpl_points": total_points,
+        "past_form": form_lookup.get("AVERAGE", ""),
         "background": bios.get(str(1000001), "No bio available.")
     }
 
@@ -137,6 +139,7 @@ def extract_match_summary(manager_id, gameweek):
         "bench_player_points": bench_player_points,
         "captain": player_captain,
         "captain_points": captain_points,
+        "past_form": form_lookup.get(manager_id, ""),
         "team_name": team_bio['team_name'],
         "manager": team_bio['manager'],
         "number_of_league_titles": team_bio['league_wins'],
@@ -156,6 +159,9 @@ if not matches_data:
 else:
     print("League matches loaded successfully.")
 fixtures = matches_data["results"]
+
+# Recent head-to-head form (up to 5 gameweeks) for every team in the league
+form_lookup = get_recent_form(fixtures, gameweek)
 
 print("Finished loading data from API.")
 

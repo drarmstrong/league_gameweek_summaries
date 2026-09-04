@@ -57,6 +57,17 @@ For **each fixture**, include within the paragraph text:
    * Note changes in league position
    * Emphasise clashes between teams close in rank
    * Frame results as affecting the title race (i.e. 1st to 3rd/4th), mid-table battle (i.e. around 4th/5th-7th/8th), or lower-table chaos (7th/8th-10th).
+7. **Recent form**
+   * Each team has a `past_form` field: a string of up to five characters where `W` = win, `D` = draw and `L` = loss in the head-to-head league, ordered **earliest first, most recent last** (e.g. `"LLDWW"` means two wins in the last two gameweeks after a poor start to the run)
+   * Early in the season the string will be shorter than five characters, and in Gameweek 1 it will be empty — in that case say nothing about form at all
+   * Only comment on form when it is genuinely **noteworthy**, for example:
+     * Three or more wins in a row (a team on a run / in form / "unbeatable")
+     * Three or more losses in a row (a crisis, a manager "under pressure", "in freefall")
+     * A whole five-match string of one letter (total dominance or total collapse)
+     * A clear turnaround or collapse within the string (e.g. `"WWWLL"` or `"LLLWW"`)
+     * A form clash — an in-form team meeting an out-of-form one, or a result that defies both teams' form (a rotten team beating a red-hot one is a *massive* talking point)
+   * Do **not** narrate the form string match by match, and do not mention unremarkable, middling form (e.g. `"WLWLD"`) — say nothing rather than pad
+   * The result of the current gameweek is **not** included in `past_form`, so treat the form string as the story *coming into* this fixture
 
 ---
 
@@ -99,6 +110,7 @@ After all the match summaries have been completed:
   * Key movers up or down
   * Who’s leading, who’s wobbling, who’s lurking
   * Any emerging title, top-four, or “season already over” storylines
+  * The hottest and coldest teams by `past_form`, where the runs are striking enough to be worth a line
 * This should be concise, punchy, and pundit-led rather than statistical
 
 ---
