@@ -91,9 +91,21 @@ def get_recent_form(fixtures, gameweek, window=FORM_WINDOW):
 
 
 def get_latest_gameweek():
+    """Return the most recent gameweek whose scores are final.
+
+    The ``is_previous`` flag can't be used for this: it means "the gameweek
+    before ``is_current``", and ``is_current`` only moves on once the next
+    deadline passes — so between a gameweek finishing and the following
+    deadline, ``is_previous`` lags a week behind. Instead take the highest
+    event that is both ``finished`` and ``data_checked``; the latter is only
+    set once bonus points and any corrections have been applied, so we never
+    report on provisional scores. Falls back to gameweek 1 before any
+    gameweek has completed.
+    """
     url = f"{BASE_URL}/bootstrap-static/"
     data = requests.get(url).json()
-    for event in data.get("events", []):
-        if event.get("is_previous"):
-            return event.get("id")
-    return 1
+    completed = [
+        event["id"] for event in data.get("events", [])
+        if event.get("finished") and event.get("data_checked")
+    ]
+    return max(completed) if completed else 1
