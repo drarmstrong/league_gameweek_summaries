@@ -132,9 +132,10 @@ def get_average_standings(standings, match, form_lookup):
             league_points = position["total"]
             total_points = position["points_for"]
             break
+    side = "entry_1" if match["entry_1_name"] == "AVERAGE" else "entry_2"
     return {
         "name": st.session_state.bios.get(str(1000001), {}).get("team_name", "Unknown"),
-        "manager_points": match["entry_1_points"],
+        "manager_points": match[f"{side}_points"],
         "league_rank": rank,
         "previous_league_rank": previous_rank,
         "overall_league_points": league_points,

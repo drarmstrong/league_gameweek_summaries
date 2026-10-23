@@ -50,6 +50,11 @@ def get_player_data():
     url = f"{BASE_URL}/bootstrap-static/"
     return requests.get(url).json()
 
+def get_fixtures():
+    """Return every Premier League fixture of the season, with kickoff times."""
+    url = f"{BASE_URL}/fixtures/"
+    return requests.get(url).json()
+
 def get_recent_form(fixtures, gameweek, window=FORM_WINDOW):
     """Build a lookup of recent head-to-head form for every team in the league.
 

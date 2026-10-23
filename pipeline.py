@@ -10,33 +10,8 @@ from utils import (
 from llm_summary import query_ollama, save_output
 from pprint import pprint
 
-print("Loading data from API...")
 
-# Load config, bios and prompts data
-with open("fpl_data/config.json") as f:
-    config = json.load(f)
-
-with open("fpl_data/bios.json") as f:
-    bios = json.load(f)
-
-with open("prompts.json") as f:
-    prompts = json.load(f)
-
-h2h_league_id = config["h2h_league_id"]
-gameweek = config["latest_gameweek"]
-
-# Load player data for name lookups
-player_data = get_player_data()
-if not player_data:
-    raise Exception("Failed to load player data from API.")
-else:
-    print("Player data loaded successfully.")
-players = player_data["elements"]
-player_name_lookup = {p["id"]: p["web_name"] for p in players}
-player_points_lookup = {p["id"]: p["event_points"] for p in players}
-
-
-def get_average_standings(standings, match):
+def get_average_standings(standings, match, bios, form_lookup):
     for position in standings:
         if position["entry_name"] == "AVERAGE":
             rank = position["rank"]
@@ -44,9 +19,10 @@ def get_average_standings(standings, match):
             league_points = position["total"]
             total_points = position["points_for"]
             break
+    side = "entry_1" if match["entry_1_name"] == "AVERAGE" else "entry_2"
     return {
         "name": bios.get(str(1000001), {}).get("team_name", "Unknown"),
-        "manager_points": match["entry_1_points"],
+        "manager_points": match[f"{side}_points"],
         "league_rank": rank,
         "previous_league_rank": previous_rank,
         "overall_league_points": league_points,
@@ -56,7 +32,7 @@ def get_average_standings(standings, match):
     }
 
 
-def extract_match_summary(manager_id, gameweek):
+def extract_match_summary(manager_id, gameweek, bios, player_name_lookup, player_points_lookup, standings, form_lookup):
     """Extract match summary including captain/vice logic.
 
     Both ``is_captain`` and ``is_vice_captain`` are checked to determine who
@@ -146,103 +122,143 @@ def extract_match_summary(manager_id, gameweek):
         "background": team_bio['bio']
     }
 
-# Fetch league data
-standings_data = get_h2h_league_standings(h2h_league_id)  # Get data from API
-if not standings_data:
-    raise Exception("Failed to load league standings from API.")
-else:
-    print("League standings loaded successfully.")
-standings = standings_data["standings"]["results"]
-matches_data = get_h2h_league_matches(h2h_league_id)  # Get data from API
-if not matches_data:
-    raise Exception("Failed to load league matches from API.")
-else:
-    print("League matches loaded successfully.")
-fixtures = matches_data["results"]
 
-# Recent head-to-head form (up to 5 gameweeks) for every team in the league
-form_lookup = get_recent_form(fixtures, gameweek)
+def build_match_reports(h2h_league_id, gameweek, bios):
+    """Fetch everything needed from the API and build one report per match.
 
-print("Finished loading data from API.")
+    Player points come from ``event_points``, which is only valid for the
+    current gameweek, so run this before the next gameweek's deadline.
+    """
+    print("Loading data from API...")
 
-match_reports = []
-match_num = 0
-
-
-for match in fixtures:
-    if match["event"] != gameweek:
-        continue
-    
-    match_num += 1
-    print(f"Running process for Match {match_num}...")
-    team_1_id = match["entry_1_entry"]
-    team_2_id = match["entry_2_entry"]
-
-    team_1_name = match["entry_1_name"]
-    team_2_name = match["entry_2_name"]
-
-    if team_1_name != "AVERAGE" and team_2_name != "AVERAGE":
-        print(f"Processing match between {team_1_name} and {team_2_name}...")
-
-        team_1 = extract_match_summary(team_1_id, gameweek=gameweek)
-        team_2 = extract_match_summary(team_2_id, gameweek=gameweek)
-
-        match_reports.append({
-            "match": match_num,
-            "team_1": {**team_1, "name": team_1_name},
-            "team_2": {**team_2, "name": team_2_name},
-            "score": f"{team_1['manager_points']} - {team_2['manager_points']}",
-        })
-        print("Finished processing match report for Match", match_num)
-    elif team_1_name == "AVERAGE":
-        print(f"Processing match between Average and {team_2_name}...")
-        team_1 = get_average_standings(standings, match)
-        team_2 = extract_match_summary(team_2_id, gameweek=gameweek)
-
-        match_reports.append({
-            "match": match_num,
-            "team_1": {**team_1, "name": team_1['background']['team_name']},
-            "team_2": {**team_2, "name": team_2_name},
-            "score": f"{match['entry_1_points']} - {team_2['manager_points']}",
-        })
-        print("Finished processing match report for Match", match_num)
-    elif team_2_name == "AVERAGE":
-        print(f"Processing match between {team_1_name} and Average...")
-        team_1 = extract_match_summary(team_1_id, gameweek=gameweek)
-        team_2 = get_average_standings(standings, match)
-
-        match_reports.append({
-            "match": match_num,
-            "team_1": {**team_1, "name": team_1_name},
-            "team_2": {**team_2, "name": team_2['background']['team_name']},
-            "score": f"{team_1['manager_points']} - {match['entry_2_points']}",
-        })
-        print("Finished processing match report for Match", match_num)
+    # Load player data for name lookups
+    player_data = get_player_data()
+    if not player_data:
+        raise Exception("Failed to load player data from API.")
     else:
-        print(f"Skipping match {match_num} as it doesn't match.")
-                
-        
+        print("Player data loaded successfully.")
+    players = player_data["elements"]
+    player_name_lookup = {p["id"]: p["web_name"] for p in players}
+    player_points_lookup = {p["id"]: p["event_points"] for p in players}
 
-print("All match reports processed. Generating summary...")
+    # Fetch league data
+    standings_data = get_h2h_league_standings(h2h_league_id)  # Get data from API
+    if not standings_data:
+        raise Exception("Failed to load league standings from API.")
+    else:
+        print("League standings loaded successfully.")
+    standings = standings_data["standings"]["results"]
+    matches_data = get_h2h_league_matches(h2h_league_id)  # Get data from API
+    if not matches_data:
+        raise Exception("Failed to load league matches from API.")
+    else:
+        print("League matches loaded successfully.")
+    fixtures = matches_data["results"]
 
-# Create prompt for LLM from templates and match reports
-full_prompt = (prompts["intro"])
-full_prompt += f'\n{match_reports}\n'
-full_prompt += prompts["outro"]
+    # Recent head-to-head form (up to 5 gameweeks) for every team in the league
+    form_lookup = get_recent_form(fixtures, gameweek)
 
-print("Full prompt generated.")
-pprint(full_prompt)
+    print("Finished loading data from API.")
 
-#######################################
-# Local LLM query via Ollama - can be removed if using external LLM
-#print("Querying LLM for summary...")
-#
-#model = "phi4"  # or "mistral" or whatever you've pulled via Ollama
-#summary = query_ollama(full_prompt, model=model)
-#
-#print("LLM summary generated. Saving to file...")
-#
-# Save to file
-#save_output(summary, filename=f"reports/GW{gameweek}_Match_Report.md")
-#print(f"LLM summary saved as GW{gameweek}_Match_Report.md")
-#######################################
+    def summarise(manager_id):
+        return extract_match_summary(manager_id, gameweek, bios, player_name_lookup,
+                                     player_points_lookup, standings, form_lookup)
+
+    match_reports = []
+    match_num = 0
+
+    for match in fixtures:
+        if match["event"] != gameweek:
+            continue
+
+        match_num += 1
+        print(f"Running process for Match {match_num}...")
+        team_1_id = match["entry_1_entry"]
+        team_2_id = match["entry_2_entry"]
+
+        team_1_name = match["entry_1_name"]
+        team_2_name = match["entry_2_name"]
+
+        if team_1_name != "AVERAGE" and team_2_name != "AVERAGE":
+            print(f"Processing match between {team_1_name} and {team_2_name}...")
+
+            team_1 = summarise(team_1_id)
+            team_2 = summarise(team_2_id)
+
+            match_reports.append({
+                "match": match_num,
+                "team_1": {**team_1, "name": team_1_name},
+                "team_2": {**team_2, "name": team_2_name},
+                "score": f"{team_1['manager_points']} - {team_2['manager_points']}",
+            })
+            print("Finished processing match report for Match", match_num)
+        elif team_1_name == "AVERAGE":
+            print(f"Processing match between Average and {team_2_name}...")
+            team_1 = get_average_standings(standings, match, bios, form_lookup)
+            team_2 = summarise(team_2_id)
+
+            match_reports.append({
+                "match": match_num,
+                "team_1": {**team_1, "name": team_1['background']['team_name']},
+                "team_2": {**team_2, "name": team_2_name},
+                "score": f"{match['entry_1_points']} - {team_2['manager_points']}",
+            })
+            print("Finished processing match report for Match", match_num)
+        elif team_2_name == "AVERAGE":
+            print(f"Processing match between {team_1_name} and Average...")
+            team_1 = summarise(team_1_id)
+            team_2 = get_average_standings(standings, match, bios, form_lookup)
+
+            match_reports.append({
+                "match": match_num,
+                "team_1": {**team_1, "name": team_1_name},
+                "team_2": {**team_2, "name": team_2['background']['team_name']},
+                "score": f"{team_1['manager_points']} - {match['entry_2_points']}",
+            })
+            print("Finished processing match report for Match", match_num)
+        else:
+            print(f"Skipping match {match_num} as it doesn't match.")
+
+    print("All match reports processed.")
+    return match_reports
+
+
+if __name__ == "__main__":
+    # Load config, bios and prompts data
+    with open("fpl_data/config.json") as f:
+        config = json.load(f)
+
+    with open("fpl_data/bios.json") as f:
+        bios = json.load(f)
+
+    with open("prompts.json") as f:
+        prompts = json.load(f)
+
+    h2h_league_id = config["h2h_league_id"]
+    gameweek = config["latest_gameweek"]
+
+    match_reports = build_match_reports(h2h_league_id, gameweek, bios)
+
+    print("Generating summary...")
+
+    # Create prompt for LLM from templates and match reports
+    full_prompt = (prompts["intro"])
+    full_prompt += f'\n{match_reports}\n'
+    full_prompt += prompts["outro"]
+
+    print("Full prompt generated.")
+    pprint(full_prompt)
+
+    #######################################
+    # Local LLM query via Ollama - can be removed if using external LLM
+    #print("Querying LLM for summary...")
+    #
+    #model = "phi4"  # or "mistral" or whatever you've pulled via Ollama
+    #summary = query_ollama(full_prompt, model=model)
+    #
+    #print("LLM summary generated. Saving to file...")
+    #
+    # Save to file
+    #save_output(summary, filename=f"reports/GW{gameweek}_Match_Report.md")
+    #print(f"LLM summary saved as GW{gameweek}_Match_Report.md")
+    #######################################

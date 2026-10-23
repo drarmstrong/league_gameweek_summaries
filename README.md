@@ -87,6 +87,20 @@ To run the original command-line pipeline:
 python pipeline.py
 ```
 
+### Option 3: Email the report automatically (GitHub Actions)
+
+`.github/workflows/gameweek_report.yml` runs `scheduled_run.py` hourly and emails you the prompt (plus the match data as attachments) once a gameweek's scores are confirmed and the head-to-head results are in. Each gameweek is sent once.
+
+Most runs exit within seconds without touching the API: `fpl_data/schedule.json` caches every gameweek's deadline and last kickoff, and checks only start at 05:00 UTC on the day after the last match of the next unreported gameweek, since FPL doesn't confirm scores until then. The workflow commits that file back to the repo whenever it changes.
+
+Setup (in the repository's **Settings → Secrets and variables → Actions**):
+
+1. Add the secrets `SMTP_USERNAME` (e.g. your Gmail address) and `SMTP_PASSWORD` (a [Gmail app password](https://myaccount.google.com/apppasswords), not your normal password). Optionally add `EMAIL_TO` if the report should go somewhere other than `SMTP_USERNAME`.
+2. For a provider other than Gmail, add the variables `SMTP_HOST` and `SMTP_PORT` (SSL).
+3. Optionally set `"brutality_level"` in `fpl_data/config.json` (defaults to 3).
+
+To test, open **Actions → Gameweek report → Run workflow** and enter a gameweek to email it straight away. Locally, `python scheduled_run.py run --gameweek 7 --dry-run` saves the report to `reports/` without emailing.
+
 ### Note: you will need to create the config.json and bios.json files from the templates before the code will function (see below for more info)
 
 ---

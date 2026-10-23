@@ -1,0 +1,65 @@
+name: Gameweek report
+
+on:
+  schedule:
+    # Hourly, off the top of the hour when GitHub's scheduler is busiest.
+    # Most runs stop after the gate step, see scheduled_run.py.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      gameweek:
+        description: "Email this gameweek's report now, skipping the checks (blank = normal check)"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gameweek-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decide whether a check is due
+        id: gate
+        # Standard library only, so no setup or installs are needed for this
+        run: python3 scheduled_run.py gate
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.due == 'true' || inputs.gameweek
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: steps.gate.outputs.due == 'true' || inputs.gameweek
+        run: pip install requests
+
+      - name: Check gameweek and email report
+        if: steps.gate.outputs.due == 'true' || inputs.gameweek
+        env:
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          SMTP_HOST: ${{ vars.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT }}
+          FORCE_GAMEWEEK: ${{ inputs.gameweek }}
+        run: python scheduled_run.py run ${FORCE_GAMEWEEK:+--gameweek "$FORCE_GAMEWEEK"}
+
+      - name: Save schedule
+        if: steps.gate.outputs.due == 'true' || inputs.gameweek
+        run: |
+          git add fpl_data/schedule.json
+          if git diff --cached --quiet; then
+            echo "Schedule unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update gameweek schedule"
+          git pull --rebase
+          git push
