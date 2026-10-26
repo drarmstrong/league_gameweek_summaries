@@ -9,12 +9,15 @@ Meant to be triggered on a frequent schedule by
   gameweek's last kickoff, or when the cached schedule is old enough to need refreshing.
 - ``run`` refreshes the cached schedule, and if the gameweek is final builds
   the match reports, emails the prompt and records the gameweek as reported
-  so each one is only sent once.
+  so each one is only sent once. With ``--poll`` it keeps checking inside
+  the window rather than relying on GitHub, which drops most scheduled runs,
+  to start another run in 15 minutes' time.
 """
 import argparse
 import json
 import os
 import smtplib
+import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
@@ -30,6 +33,11 @@ CHECK_START_HOUR = 5
 NO_KICKOFF_GRACE = timedelta(days=3)
 # Kickoff times move (TV picks, postponements), so refresh at least this often
 SCHEDULE_MAX_AGE = timedelta(days=3)
+# With --poll, check this often until final, within GitHub's 6 hour job limit
+# and stopping at this UTC hour so nothing runs overnight
+POLL_INTERVAL = timedelta(minutes=15)
+MAX_POLL_TIME = timedelta(hours=5, minutes=30)
+POLL_END_HOUR = 23
 
 
 def now():
@@ -204,25 +212,39 @@ def gate():
             f.write(f"due={str(due).lower()}\n")
 
 
-def run(force_gameweek=None, dry_run=False):
+def run(force_gameweek=None, dry_run=False, poll=False):
     with open("fpl_data/config.json") as f:
         config = json.load(f)
 
-    schedule, events = fetch_schedule()
-    state = refresh_state(load_state(), schedule, events)
+    started = now()
+    stop_at = started
+    if poll:
+        end_of_day = started.replace(hour=POLL_END_HOUR, minute=0, second=0, microsecond=0)
+        stop_at = min(started + MAX_POLL_TIME, end_of_day)
 
-    if force_gameweek:
-        gameweek = force_gameweek
-    else:
+    state = load_state()
+    while True:
+        schedule, events = fetch_schedule()
+        state = refresh_state(state, schedule, events)
         gameweek, opens = check_opens_at(state)
-        if opens is None or now() < opens or not is_final(gameweek, events, config["h2h_league_id"]):
-            if not dry_run:
-                save_state(state)
-            return
+        in_window = opens is not None and now() >= opens
 
-    report(gameweek, config, dry_run)
-    if not dry_run:
+        if force_gameweek:
+            gameweek, ready = force_gameweek, True
+        else:
+            ready = in_window and is_final(gameweek, events, config["h2h_league_id"])
+
+        if ready or not in_window or now() + POLL_INTERVAL > stop_at:
+            break
+        print(f"Checking again in {POLL_INTERVAL.seconds // 60} minutes.")
+        time.sleep(POLL_INTERVAL.total_seconds())
+
+    if ready:
+        report(gameweek, config, dry_run)
         state["last_reported_gameweek"] = max(state["last_reported_gameweek"], gameweek)
+    elif in_window:
+        print(f"Stopped polling, GW{gameweek} will be checked again by the next run.")
+    if not dry_run:
         save_state(state)
 
 
@@ -233,9 +255,10 @@ if __name__ == "__main__":
     run_parser = subparsers.add_parser("run", help="Check the gameweek and email the report if final")
     run_parser.add_argument("--gameweek", type=int, help="Report this gameweek now, skipping the checks")
     run_parser.add_argument("--dry-run", action="store_true", help="Save the report locally without emailing or updating the schedule")
+    run_parser.add_argument("--poll", action="store_true", help="Keep checking every 15 minutes until the gameweek is final")
     args = parser.parse_args()
 
     if args.command == "gate":
         gate()
     else:
-        run(args.gameweek, args.dry_run)
+        run(args.gameweek, args.dry_run, args.poll)

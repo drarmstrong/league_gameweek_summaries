@@ -2,10 +2,11 @@ name: Gameweek report
 
 on:
   schedule:
-    # Every 15 minutes from 05:00 to 23:00 UTC, off the top of the hour when
-    # GitHub's scheduler is busiest. Checks never open before 05:00 anyway.
-    # Most runs stop after the gate step, see scheduled_run.py.
-    - cron: "7,22,37,52 5-22 * * *"
+    # Hourly from 05:00 to 23:00 UTC, off the top of the hour when GitHub's
+    # scheduler is busiest. GitHub drops most of these, so a run inside the
+    # check window keeps polling itself (--poll) rather than relying on the
+    # next one. Most runs stop after the gate step, see scheduled_run.py.
+    - cron: "7 5-22 * * *"
   workflow_dispatch:
     inputs:
       gameweek:
@@ -22,7 +23,8 @@ concurrency:
 jobs:
   report:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Room for scheduled_run.py's 5.5 hour poll, within GitHub's 6 hour limit
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
 
@@ -49,7 +51,8 @@ jobs:
           SMTP_HOST: ${{ vars.SMTP_HOST }}
           SMTP_PORT: ${{ vars.SMTP_PORT }}
           FORCE_GAMEWEEK: ${{ inputs.gameweek }}
-        run: python scheduled_run.py run ${FORCE_GAMEWEEK:+--gameweek "$FORCE_GAMEWEEK"}
+        # -u so each check shows in the log as it happens
+        run: python -u scheduled_run.py run --poll ${FORCE_GAMEWEEK:+--gameweek "$FORCE_GAMEWEEK"}
 
       - name: Save schedule
         if: steps.gate.outputs.due == 'true' || inputs.gameweek

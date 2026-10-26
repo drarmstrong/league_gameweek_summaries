@@ -89,9 +89,9 @@ python pipeline.py
 
 ### Option 3: Email the report automatically (GitHub Actions)
 
-`.github/workflows/gameweek_report.yml` runs `scheduled_run.py` every 15 minutes between 05:00 and 23:00 UTC and emails you the prompt (plus the match data as attachments) once a gameweek's scores are confirmed and the head-to-head results are in. Each gameweek is sent once.
+`.github/workflows/gameweek_report.yml` runs `scheduled_run.py` hourly between 05:00 and 23:00 UTC and emails you the prompt (plus the match data as attachments) once a gameweek's scores are confirmed and the head-to-head results are in. Each gameweek is sent once.
 
-Most runs exit within seconds without touching the API: `fpl_data/schedule.json` caches every gameweek's deadline and last kickoff, and checks only start at 05:00 UTC on the day after the last match of the next unreported gameweek, since FPL doesn't confirm scores until then. The workflow commits that file back to the repo whenever it changes.
+Most runs exit within seconds without touching the API: `fpl_data/schedule.json` caches every gameweek's deadline and last kickoff, and checks only start at 05:00 UTC on the day after the last match of the next unreported gameweek, since FPL doesn't confirm scores until then. GitHub drops many scheduled runs, so a run that finds the gameweek not yet final keeps checking every 15 minutes (for up to 5.5 hours, and never past 23:00 UTC) instead of waiting for the next one. The workflow commits that file back to the repo whenever it changes.
 
 Setup (in the repository's **Settings → Secrets and variables → Actions**):
 
